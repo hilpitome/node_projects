@@ -6,9 +6,9 @@ var csv = require('ya-csv');
 var mysql = require("mysql");
 var con = mysql.createConnection({
   host: "localhost",
-  user: "root",
-  password: "semi45",
-  database: "test"
+  user: "",
+  password: "",
+  database: ""
 });
 
 var pageToVisit = "https://www.tripadvisor.com/Restaurants-g294206-oa40-Kenya.html#LOCATION_LIST";
