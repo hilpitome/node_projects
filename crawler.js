@@ -1,9 +1,10 @@
 var request = require('request');
 var cheerio = require('cheerio');
 var URL = require('url-parse');
-var fs = require('fs')
-var csvWriter = require('csv-write-stream')
-var writer = csvWriter({sendHeaders: false})
+var fs = require('fs');
+var csv = require('ya-csv');
+var mysql = require("mysql");
+var writer = csv.createCsvStreamWriter(fs.createWriteStream('file_name.csv', {'flags': 'a'}));
 var pageToVisit = "https://www.tripadvisor.com/Restaurants-g294206-Kenya.html";
 var baseUrl = "https://www.tripadvisor.com"
 var count = 0;
@@ -91,13 +92,12 @@ function restaurantLatLng(restaurant_url, name){
       var lat = map_container.data('lat');
       var lng = map_container.data('lng');
 
-      console.log(name+": "+lat+" "+lng);
+    writer.writeRecord([name, lat, lng]);
+
+
       count += 1
       console.log(count);
-      // writer.pipe(fs.createWriteStream('restuarant_with_locations.csv',
-      // {'flags': 'a'})) // ensures that it appends row and does not overwrite page
-      // writer.write({entity_name: "this", entity_lat: "time", entity_lng: "of year"})
-      // writer.end()
+
     }
   });
 }
