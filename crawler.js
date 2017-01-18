@@ -1,8 +1,13 @@
 var request = require('request');
 var cheerio = require('cheerio');
 var URL = require('url-parse');
+var fs = require('fs')
+var csvWriter = require('csv-write-stream')
+var writer = csvWriter({sendHeaders: false})
 var pageToVisit = "https://www.tripadvisor.com/Restaurants-g294206-Kenya.html";
-var authority = "https://www.tripadvisor.com"
+var baseUrl = "https://www.tripadvisor.com"
+var count = 0;
+
 console.log("Visiting page " + pageToVisit);
 request(pageToVisit, function(error, response, body) {
    if(error) {
@@ -21,7 +26,7 @@ request(pageToVisit, function(error, response, body) {
 
     for (var i = 0; i<city_urls.length; i++){
 
-      goToRestaurant(authority+city_urls[i]);
+      goToRestaurant(baseUrl+city_urls[i]);
 
     }
 
@@ -32,7 +37,9 @@ request(pageToVisit, function(error, response, body) {
 
 });
 function goToRestaurant(city_to_visit){
-var restaurants = [];
+
+
+
   request(city_to_visit, function(error, response, body){
 
 
@@ -45,26 +52,29 @@ var restaurants = [];
       if(response.statusCode === 200) {
         // Parse the document body
         var $ = cheerio.load(body);
+        $('.shortSellDetails .title').each(function(index, title){
+          var restaurant_name = $(title).text();
+         var restaurant_abs_url = $(title).children().attr('href');
+         result2 = baseUrl+restaurant_abs_url;
+         restaurantLatLng(result2, restaurant_name);
+        });
 
-         // array to collect city urls on a page
-       $('shortSellDetails','.title').map(function(i,el){
-         var rest = ($(this).children().attr('href'));
-
-
-
-       });
-
+      //   var restaurants = []; // array to collect city urls on a page
+      //  $('shortSellDetails','.title').map(function(i,el){
+      //    var rest = ($(this).children().attr('href'));
+       //
+      //  console.log(rest+" is it me?");
+       //
+      //  });
 
        //  var result2  =  $('.poi').children().attr('href');
-       //  result2 = authority+result2
 
-       //  restaurantLatLng(result2);
+
+
       }
-
    });
-   console.log(restaurants);
 }
-function restaurantLatLng(restaurant_url){
+function restaurantLatLng(restaurant_url, name){
 
   request(restaurant_url, function(error, response, body) {
 
@@ -81,7 +91,13 @@ function restaurantLatLng(restaurant_url){
       var lat = map_container.data('lat');
       var lng = map_container.data('lng');
 
-      console.log(lat+" "+lng);
+      console.log(name+": "+lat+" "+lng);
+      count += 1
+      console.log(count);
+      // writer.pipe(fs.createWriteStream('restuarant_with_locations.csv',
+      // {'flags': 'a'})) // ensures that it appends row and does not overwrite page
+      // writer.write({entity_name: "this", entity_lat: "time", entity_lng: "of year"})
+      // writer.end()
     }
   });
 }
