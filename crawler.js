@@ -4,12 +4,18 @@ var URL = require('url-parse');
 var fs = require('fs');
 var csv = require('ya-csv');
 var mysql = require("mysql");
-var writer = csv.createCsvStreamWriter(fs.createWriteStream('file_name.csv', {'flags': 'a'}));
-var pageToVisit = "https://www.tripadvisor.com/Restaurants-g294206-Kenya.html";
+var con = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "semi45",
+  database: "test"
+});
+
+var pageToVisit = "https://www.tripadvisor.com/Restaurants-g294206-oa40-Kenya.html#LOCATION_LIST";
 var baseUrl = "https://www.tripadvisor.com"
 var count = 0;
 
-console.log("Visiting page " + pageToVisit);
+console.log("Visiting: "+pageToVisit);
 request(pageToVisit, function(error, response, body) {
    if(error) {
      console.log("Error: " + error);
@@ -19,10 +25,13 @@ request(pageToVisit, function(error, response, body) {
    if(response.statusCode === 200) {
      // Parse the document body
      var $ = cheerio.load(body);
+
      var city_urls = []; // array to collect city urls on a page
-    $('.geo_name').map(function(i,el){
+
+    $('.geoList li').map(function(i,el){
       var url_of_city = ($(this).children().attr('href'));
       city_urls.push(url_of_city)
+
     });
 
     for (var i = 0; i<city_urls.length; i++){
@@ -60,17 +69,6 @@ function goToRestaurant(city_to_visit){
          restaurantLatLng(result2, restaurant_name);
         });
 
-      //   var restaurants = []; // array to collect city urls on a page
-      //  $('shortSellDetails','.title').map(function(i,el){
-      //    var rest = ($(this).children().attr('href'));
-       //
-      //  console.log(rest+" is it me?");
-       //
-      //  });
-
-       //  var result2  =  $('.poi').children().attr('href');
-
-
 
       }
    });
@@ -91,8 +89,15 @@ function restaurantLatLng(restaurant_url, name){
 
       var lat = map_container.data('lat');
       var lng = map_container.data('lng');
+      var restaurant_info = {name: name, latitude: lat, longitude: lng}
+      con.query(
+      'INSERT INTO restaurants SET ?', restaurant_info,
+      function (err, result) {
+        if (err) throw err;
 
-    writer.writeRecord([name, lat, lng]);
+        console.log('Changed ' + result.changedRows + ' rows');
+      }
+    );
 
 
       count += 1
